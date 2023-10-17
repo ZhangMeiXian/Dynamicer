@@ -1,8 +1,6 @@
 # train SMD model
 # change "model_name" parameter to choose different method
 python -u run.py \
-  --dataset_root_path ./data/SMD/ \
-  --dataset_filename SMD.csv \
   --model_des SMD_train \
   --description SMD_train \
   --dataset_field SMD \
@@ -23,8 +21,6 @@ python -u run.py \
 # test only
 python -u run.py \
   --no_training \
-  --dataset_root_path ./data/SMD/ \
-  --dataset_filename SMD.csv \
   --model_des SMD_train \
   --description SMD_test \
   --model_name ns_Autoformer \

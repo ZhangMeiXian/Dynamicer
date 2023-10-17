@@ -21,4 +21,19 @@ cd data && wget https://raw.githubusercontent.com/khundman/telemanom/master/labe
 ```
 
 # Data Preprocessing
+> python3 data_preprocessing.py --dataset_name SMD
+
+# Get Dynamic Forecasting Started
+> bash ./scripts/SMD/SMD_forecasting.sh
+
+# Get Dynamic Anomaly Detection Started
+> bash ./scripts/SMD/SMD_anomaly_detection.sh
+
+# Results
+
+# Citations
+
+# Contact
+
+# Acknowledgement
 

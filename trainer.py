@@ -26,9 +26,6 @@ def main():
 
     # dataset config
     parser.add_argument('--dataset_field', type=str, required=True, default='SMD', help='dataset field')
-    parser.add_argument('--dataset_root_path', type=str, required=True, default='./data/SMD/',
-                        help='root path of the dataset file')
-    parser.add_argument('--dataset_filename', type=str, default='SMD.csv', required=True, help='dataset filename')
     parser.add_argument('--forcast_task', type=str, default='S',
                         help='forecasting task, options:[M, S, MS]; '
                              'M:multivariate predict multivariate, '

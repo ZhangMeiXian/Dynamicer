@@ -16,7 +16,7 @@ def main():
     """
     数值预测模型训练入口
     """
-    parser = argparse.ArgumentParser(description='Adjusted Non-stationary Transformers for Time Series Forecasting')
+    parser = argparse.ArgumentParser(description='Trainer for Adjusted Non-stationary Dynamic Time Series Forecasting')
 
 
 if __name__ == '__main__':

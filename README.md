@@ -6,13 +6,11 @@ python >= 3.6
 > pip3 install -r requirements.txt
 
 # Data Preparation
-SMT&SMAP: git download.
+SMD: git download.
 > [SMD](https://github.com/NetManAIOps/OmniAnomaly/tree/master/ServerMachineDataset)
-> [SMAP](https://github.com/khundman/telemanom)
 
 SWat&WADI: apply for the data access permission.
-> [SWat](https://itrust.sutd.edu.sg/itrust-labs_datasets/dataset_info/)
-> [WADI](https://itrust.sutd.edu.sg/itrust-labs_datasets/dataset_info/)
+> [SWat&WADI](https://itrust.sutd.edu.sg/itrust-labs_datasets/dataset_info/)
 
 MSL&SMAP: terminate download and unzip data.
 ```shell

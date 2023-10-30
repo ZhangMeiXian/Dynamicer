@@ -44,44 +44,37 @@ class DataPreprocessor(object):
         if args is None or args.dataset is None:
             print("illegal input, please check")
             return
-        dataset_list = args.dataset
+        dataset_list = args.dataset if isinstance(args.dataset, list) else [args.dataset]
         sample_time_window_before = args.sample_time_window_before
         sample_time_window_after = args.sample_time_window_after
         sample_day_window = args.sample_day_window
         pred_len = args.pred_len
+        total_samples = []
         for dataset_name in dataset_list:
             if dataset_name == "SMD":
-                DataPreprocessor.get_SMD_dataset(
+                cur_samples = DataPreprocessor.get_SMD_dataset(
                     sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
             elif dataset_name == "SMAP" or dataset_name == "MSL":
-                DataPreprocessor.get_SMAP_and_MSL_dataset(
+                cur_samples = DataPreprocessor.get_SMAP_and_MSL_dataset(
                     sample_time_window_before, sample_time_window_after, sample_day_window, pred_len, dataset_name)
             elif dataset_name == "WADI":
-                DataPreprocessor.get_WADI_dataset(
+                cur_samples = DataPreprocessor.get_WADI_dataset(
                     sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
-            # elif dataset_name == "SWaT":
-            #     DataPreprocessor.get_SWaT_dataset(
-            #         sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
-            # elif dataset_name == "NAB":
-            #     DataPreprocessor.get_NAB_dataset(
-            #         sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
             elif dataset_name == "SkAB":
-                 DataPreprocessor.get_SkAB_dataset(
-                 sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
+                cur_samples = DataPreprocessor.get_SkAB_dataset(
+                    sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
             elif dataset_name == "AIOps":
-                DataPreprocessor.get_AIOps_dataset(
+                cur_samples = DataPreprocessor.get_AIOps_dataset(
                     sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
             elif dataset_name == "CSM":
                 # our custom dataset: Custom Server Metrics
-                DataPreprocessor.get_CSM_dataset(
+                cur_samples = DataPreprocessor.get_CSM_dataset(
                     sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
-            elif dataset_name == "custom":
-                # custom dataset can be added here
-                pass
             else:
-                logger.info("illegal dataset [{}], not in {}".format(
-                    dataset_name, ["SMD", "SMAP", "MSL", "WADI", "AIOps", "SkAB", "CSM"]))
-                continue
+                cur_samples = []
+            if cur_samples is not None and len(cur_samples) > 0:
+                total_samples.append(cur_samples)
+        return total_samples
 
     @classmethod
     def get_CSM_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
@@ -89,7 +82,7 @@ class DataPreprocessor(object):
         获取自定义数据集
         """
         index_ids = list(DATA_DETAILS.keys())
-        total_samples = []
+        total_samples, exception_count, normal_count = [], 0, 0
         for index_id in index_ids:
             source_path = DATA_DETAILS[index_id][column_source_path]
             sample_time_range = DATA_DETAILS[index_id][column_time_range]
@@ -104,11 +97,14 @@ class DataPreprocessor(object):
                 pred_len, sample_times=sample_times)
             if cur_samples is None or len(cur_samples) <= 0:
                 continue
-            total_samples.extend(cur_samples)
-            logger.info("success to get CSM samples for: {}, total: {}").format(index_id, len(cur_samples))
+            exception_count += len(cur_samples[0])
+            normal_count += len(cur_samples[1])
+            total_samples.append(cur_samples)
         sample_path = "./data/dataset/{}/{}.pickle".format("CSM", "CSM")
         Variabler.save_variable(total_samples, sample_path)
-        logger.info("success to save {} samples: {}, total: {}".format("CSM", sample_path, len(total_samples)))
+        logger.info("success to save {} samples: {}, total exception: {}, normal: {}".format(
+            "CSM", sample_path, exception_count, normal_count))
+        return total_samples
 
     @classmethod
     def get_AIOps_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
@@ -121,7 +117,7 @@ class DataPreprocessor(object):
         data.rename(columns={"timestamp": column_time, "value": column_data}, inplace=True)
         data[column_time] = data[column_time].apply(lambda x: Timer.timestamp_to_str(x))
         grouped_data = data.groupby("KPI ID")
-        total_samples = []
+        total_samples, exception_count, normal_count = [], 0, 0
         for kpi_id, kpi_source in grouped_data:
             if kpi_source is None or len(kpi_source) <= 0:
                 continue
@@ -130,11 +126,14 @@ class DataPreprocessor(object):
                 pred_len)
             if cur_samples is None or len(cur_samples) <= 0:
                 continue
-            total_samples.extend(cur_samples)
-            logger.info("success to get samples for: {}, total: {}".format(kpi_id, len(cur_samples)))
+            exception_count += len(cur_samples[0])
+            normal_count += len(cur_samples[1])
+            total_samples.append(cur_samples)
         sample_path = "./data/dataset/{}/{}.pickle".format("AIOps", "AIOps")
         Variabler.save_variable(total_samples, sample_path)
-        logger.info("success to save {} samples: {}, total: {}".format("AIOps", sample_path, len(total_samples)))
+        logger.info("success to save {} samples: {}, total exception: {}, normal: {}".format(
+            "AIOps", sample_path, exception_count, normal_count))
+        return total_samples
 
     @classmethod
     def get_SkAB_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
@@ -143,7 +142,7 @@ class DataPreprocessor(object):
         """
         root_dir = "./data/origin_data/SkAB"
         data_dirs = ["data/valve1", "data/valve2", "data/other"]
-        total_samples = []
+        total_samples, exception_count, normal_count = [], 0, 0
         for data_dir in data_dirs:
             data_path = os.path.join(root_dir, data_dir)
             for filename in os.listdir(data_path):
@@ -162,18 +161,14 @@ class DataPreprocessor(object):
                     sample_day_window, pred_len)
                 if cur_samples is None or len(cur_samples) <= 0:
                     continue
-                total_samples.extend(cur_samples)
-                logger.info("success to get samples for: {}, total: {}".format(data_des, len(cur_samples)))
+                exception_count += len(cur_samples[0])
+                normal_count += len(cur_samples[1])
+                total_samples.append(cur_samples)
         sample_path = "./data/dataset/{}/{}.pickle".format("SkAB", "SkAB")
         Variabler.save_variable(total_samples, sample_path)
-        logger.info("success to save {} samples: {}, total: {}".format("SkAB", sample_path, len(total_samples)))
-
-    @classmethod
-    def get_NAB_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
-        """
-        获取并处理NAB数据集
-        """
-        root_dir = "./data/origin_data/NAB"
+        logger.info("success to save {} samples: {}, total exception: {}, normal: {}".format(
+            "SkAB", sample_path, exception_count, normal_count))
+        return total_samples
 
     @classmethod
     def get_SMAP_and_MSL_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len,
@@ -185,7 +180,7 @@ class DataPreprocessor(object):
         test_dir = os.path.join(root_dir, "test")
         label_path = os.path.join(root_dir, "labeled_anomalies.csv")
         label_df = pd.read_csv(label_path)
-        total_samples = []
+        total_samples, exception_count, normal_count = [], 0, 0
         for filename in os.listdir(test_dir):
             if not filename.endswith(".npy"):
                 continue
@@ -214,11 +209,14 @@ class DataPreprocessor(object):
                 sample_day_window, pred_len)
             if cur_samples is None or len(cur_samples) <= 0:
                 continue
-            logger.info("success to get samples for: {}, total: {}".format(filename, len(cur_samples)))
-            total_samples.extend(cur_samples)
+            exception_count += len(cur_samples[0])
+            normal_count += len(cur_samples[1])
+            total_samples.append(cur_samples)
         sample_path = "./data/dataset/{}/{}.pickle".format(dataset_name, dataset_name)
         Variabler.save_variable(total_samples, sample_path)
-        logger.info("success to save {} samples: {}, total: {}".format(dataset_name, sample_path, len(total_samples)))
+        logger.info("success to save {} samples: {}, total exception: {}, normal: {}".format(
+            dataset_name, sample_path, exception_count, normal_count))
+        return total_samples
 
     @classmethod
     def get_total_anomaly_index(cls, anomaly_sequences):
@@ -233,21 +231,6 @@ class DataPreprocessor(object):
             for index in range(index_start, index_end + 1):
                 total_anomaly_index.append(index)
         return list(set(total_anomaly_index))
-
-    @classmethod
-    def get_SWaT_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
-        """
-        获取SWaT数据集（暂时过滤掉）
-        """
-        root_dir = "./data/origin_data/SWaT"
-        for data_dir in os.listdir(root_dir):
-            data_path = os.path.join(root_dir, data_dir)
-            for filename in os.listdir(data_path):
-                file_path = os.path.join(data_path, filename)
-                if not filename.endswith(".csv"):
-                    continue
-                cur_source = pd.read_csv(file_path)
-                print()
 
     @classmethod
     def get_WADI_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
@@ -270,9 +253,13 @@ class DataPreprocessor(object):
         sample_objs = DataPreprocessor.get_sample_objs(
             test_new, "WADI", "WADI_attackdataLABLE.csv", sample_time_window_before, sample_time_window_after,
             sample_day_window, pred_len)
+        sample_objs = [sample_objs]
+        exception_count, normal_count = len(sample_objs[0][0]), len(sample_objs[0][1])
         sample_path = "./data/dataset/WADI/WADI.pickle"
         Variabler.save_variable(sample_objs, sample_path)
-        logger.info("success to save WADI samples: {}, total: {}".format(sample_path, len(sample_objs)))
+        logger.info("success to save WADI samples: {}, total exception: {}, normal: {}".format(
+            sample_path, exception_count, normal_count))
+        return sample_objs
 
     @classmethod
     def get_time(cls, data_str, time_str):
@@ -299,7 +286,7 @@ class DataPreprocessor(object):
         data_dir = os.path.join(root_path, "test")
         label_dir = os.path.join(root_path, "test_label")
         # anomaly_detail_dir = os.path.join(root_path, "interpretation_label")
-        total_samples = []
+        total_samples, exception_count, normal_count = [], 0, 0
         for filename in os.listdir(data_dir):
             if not filename.endswith(".txt"):
                 continue
@@ -324,11 +311,14 @@ class DataPreprocessor(object):
                 pred_len)
             if cur_samples is None or len(cur_samples) <= 0:
                 continue
-            logger.info("success to get SMD dataset for: {}, total: {}".format(filename, len(cur_samples)))
-            total_samples.extend(cur_samples)
+            exception_count += len(cur_samples[0])
+            normal_count += len(cur_samples[1])
+            total_samples.append(cur_samples)
         saved_file_name = "./data/dataset/SMD/SMD.pickle"
         Variabler.save_variable(total_samples, saved_file_name)
-        logger.info("success to save total SMD dataset: {}, total: {}".format(saved_file_name, len(total_samples)))
+        logger.info("success to save total SMD dataset: {}, total exception: {}, normal: {}".format(
+            saved_file_name, exception_count, normal_count))
+        return total_samples
 
     @classmethod
     def get_sample_objs(cls, source, dataset, data_des, sample_time_window_before, sample_time_window_after,
@@ -338,7 +328,7 @@ class DataPreprocessor(object):
         """
         if source is None or len(source) <= 0:
             return None
-        sample_objs = []
+        exception_samples, normal_samples = [], []
         legal_source_count = (sample_time_window_before // minute_interval + 1 +
                               sample_time_window_after // minute_interval) * (sample_day_window + 1)
         if sample_times is None:
@@ -359,8 +349,13 @@ class DataPreprocessor(object):
             sample_obj.dataset = dataset
             sample_obj.data_des = data_des
             sample_obj.sample_label = source[source[column_time] == sample_time][column_label].iloc[0]
-            sample_objs.append(sample_obj)
-        return sample_objs
+            if sample_obj.sample_label == status_exception:
+                exception_samples.append(sample_obj)
+            else:
+                normal_samples.append(sample_obj)
+        logger.info("success to get samples for {}-{}, total exception samples: {}, total normal samples: {}".format(
+            dataset, data_des, len(exception_samples), len(normal_samples)))
+        return [exception_samples, normal_samples]
 
     @classmethod
     def get_anomaly_details(cls, file_path):
@@ -378,3 +373,92 @@ class DataPreprocessor(object):
                 for ith in range(key_start, key_end + 1):
                     anomaly_details[ith] = value_list
         return anomaly_details, list(set(total_anomaly_index_list))
+
+    @classmethod
+    def split_samples(cls, total_samples, train_ratio, test_ratio):
+        """
+        将样本分层采样数据集划分程训练、验证和测试数据集
+        """
+        if total_samples is None or len(total_samples) <= 0:
+            return None, None, None
+        train_samples, valid_samples, test_samples = [], [], []
+        for exception_samples, normal_samples in total_samples:
+            if exception_samples is not None and len(exception_samples) > 0:
+                index1, index2 = int(len(exception_samples) * train_ratio), int(
+                    len(exception_samples) * (1 - test_ratio))
+                train_samples.extend(exception_samples[:index1])
+                if index2 < len(exception_samples):
+                    valid_samples.extend(exception_samples[index1: index2])
+                if index2 < len(exception_samples):
+                    test_samples.extend(exception_samples[index2:])
+            if normal_samples is not None and len(normal_samples) > 0:
+                index1, index2 = int(len(normal_samples) * train_ratio), int(
+                    len(normal_samples) * (1 - test_ratio))
+                train_samples.extend(normal_samples[:index1])
+                if index2 < len(normal_samples):
+                    valid_samples.extend(normal_samples[index1: index2])
+                if index2 < len(normal_samples):
+                    test_samples.extend(normal_samples[index2:])
+        return train_samples, valid_samples, test_samples
+
+    @classmethod
+    def process_sample_data(cls, sample_data, sample_window_before, sample_window_after, sample_day_window):
+        """
+        process sample data
+        """
+        if sample_data is None or len(sample_data) <= 0:
+            return
+        if column_label in sample_data:
+            sample_data.drop(columns=column_label, inplace=True)
+        # process history special outliers
+        for column in sample_data.columns:
+            if column == column_time:
+                continue
+            sample_data = DataPreprocessor.remove_history_outlier(
+                sample_data, column, sample_window_before, sample_window_after, sample_day_window)
+        sample_data.sort_values(by=column_time, inplace=True)
+        return sample_data
+
+    @classmethod
+    def remove_history_outlier(cls, source_df, column_name, sample_window_before, sample_window_after,
+                               sample_day_window, anomaly_level_index=7):
+        """
+        remove extraordinary exception points in history data, substitute it by median value
+        """
+        try:
+            if source_df is None or len(source_df) <= 0:
+                return source_df
+            history_source = source_df[:(sample_window_before + 1 + sample_window_after) * (sample_day_window - 1)]
+            cur_source = source_df[(sample_window_before + 1 + sample_window_after) * (sample_day_window - 1):]
+            Q1 = DataPreprocessor.percentile(history_source[column_name].tolist(), 0.25)
+            Q3 = DataPreprocessor.percentile(history_source[column_name].tolist(), 0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - anomaly_level_index * IQR
+            upper_bound = Q3 + anomaly_level_index * IQR
+            # 使用中位数替换异常值
+            history_source.loc[
+                (history_source[column_name] < lower_bound) | (history_source[column_name] > upper_bound),
+                column_name] = history_source[column_name].median()
+            processed_source = pd.concat([history_source, cur_source])
+            return processed_source
+        except Exception as e:
+            logger.info("failed to remove outlier for: {}".format(str(e)))
+            return source_df
+
+    @classmethod
+    def percentile(cls, data_list, percentile):
+        """
+        percentile calculation
+        """
+        try:
+            if data_list is None or len(data_list) <= 0:
+                return None
+            data_sorted = sorted(data_list)
+            n = len(data_sorted)
+            k = (n - 1) * percentile
+            f = int(k)
+            c = k - f
+            return (1 - c) * data_sorted[f] + c * data_sorted[f + 1]
+        except Exception as e:
+            logger.error("failed to get percentile, error: {}".format(str(e)))
+            return None

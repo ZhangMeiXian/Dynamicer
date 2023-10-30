@@ -19,10 +19,10 @@ def main():
     # basic config
     parser.add_argument('--no_training', action="store_false", default=True, help='Training status. Default is True.')
     parser.add_argument('--model_name', choices=["ns_Transformer", "Transformer", "Autoformer", "ns_Autoformer",
-                                                 "Informer", "ns_Informer"], required=True, default='ns_Autoformer',
-                        help='Model name. Default is ns_Autoformer.')
+                                                 "Informer", "ns_Informer", "FEDformer", "ns_FEDformer"],
+                        required=True, default='ns_Autoformer', help='Model name. Default is ns_Autoformer.')
     parser.add_argument('--model_des', type=str, required=True, default='Custom_train', help='model description.')
-    parser.add_argument('--description', type=str, default='Custom_train', help='experiment description')
+    parser.add_argument('--exp_des', type=str, default='Custom_train', help='experiment description')
 
     # dataset config
     parser.add_argument('--dataset_field', type=str, required=True, default='Custom', help='dataset field')
@@ -90,7 +90,7 @@ def main():
     args = parser.parse_args()
 
     # training & testing
-    TrainExecutor.execute(args)
+    TrainExecutor(args).execute()
 
 
 if __name__ == '__main__':

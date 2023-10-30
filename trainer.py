@@ -21,16 +21,16 @@ def main():
     parser.add_argument('--model_name', choices=["ns_Transformer", "Transformer", "Autoformer", "ns_Autoformer",
                                                  "Informer", "ns_Informer"], required=True, default='ns_Autoformer',
                         help='Model name. Default is ns_Autoformer.')
-    parser.add_argument('--model_des', type=str, required=True, default='SMD_train', help='model description.')
-    parser.add_argument('--description', type=str, default='SMD_train', help='experiment description')
+    parser.add_argument('--model_des', type=str, required=True, default='Custom_train', help='model description.')
+    parser.add_argument('--description', type=str, default='Custom_train', help='experiment description')
 
     # dataset config
-    parser.add_argument('--dataset_field', type=str, required=True, default='SMD', help='dataset field')
+    parser.add_argument('--dataset_field', type=str, required=True, default='Custom', help='dataset field')
     parser.add_argument('--forcast_task', type=str, default='S',
                         help='forecasting task, options:[M, S, MS]; '
                              'M:multivariate predict multivariate, '
                              'S:univariate predict univariate, MS:multivariate predict univariate')
-    parser.add_argument('--target_index', type=str, default='index1', help='target predict index name in S or MS task')
+    parser.add_argument('--target_index', type=str, default='data', help='target predict index name in S or MS task')
     parser.add_argument('--time_embed_freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, '
                              'd:daily, b:business days, w:weekly, m:monthly], '

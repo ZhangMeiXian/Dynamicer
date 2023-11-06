@@ -51,13 +51,13 @@ class DataPreprocessor(object):
         pred_len = args.pred_len
         total_samples = []
         for dataset_name in dataset_list:
-            if dataset_name == "SMD":
-                cur_samples = DataPreprocessor.get_SMD_dataset(
-                    sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
-            elif dataset_name == "SMAP" or dataset_name == "MSL":
-                cur_samples = DataPreprocessor.get_SMAP_and_MSL_dataset(
-                    sample_time_window_before, sample_time_window_after, sample_day_window, pred_len, dataset_name)
-            elif dataset_name == "WADI":
+            # if dataset_name == "SMD":
+            #     cur_samples = DataPreprocessor.get_SMD_dataset(
+            #         sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
+            # elif dataset_name == "SMAP" or dataset_name == "MSL":
+            #     cur_samples = DataPreprocessor.get_SMAP_and_MSL_dataset(
+            #         sample_time_window_before, sample_time_window_after, sample_day_window, pred_len, dataset_name)
+            if dataset_name == "WADI":
                 cur_samples = DataPreprocessor.get_WADI_dataset(
                     sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
             elif dataset_name == "SkAB":
@@ -154,17 +154,18 @@ class DataPreprocessor(object):
                 source_df.rename(columns={"anomaly": column_label, "datetime": column_time}, inplace=True)
                 source_df[column_label] = source_df[column_label].apply(
                     lambda x: status_exception if x == 1 else status_exception_no)
-                source_df[column_time] = Timer.generate_time_list(len(source_df))
                 source_df.drop(columns=["changepoint"], inplace=True)
                 cur_samples = DataPreprocessor.get_sample_objs(
                     source_df, "SkAB", data_des, sample_time_window_before, sample_time_window_after,
-                    sample_day_window, pred_len)
+                    sample_day_window, pred_len, second_interval=1)
                 if cur_samples is None or len(cur_samples) <= 0:
                     continue
                 exception_count += len(cur_samples[0])
                 normal_count += len(cur_samples[1])
                 total_samples.append(cur_samples)
         sample_path = "./data/dataset/{}/{}.pickle".format("SkAB", "SkAB")
+        if not os.path.exists("./data/dataset/{}".format("SkAB")):
+            os.makedirs("./data/dataset/{}".format("SkAB"))
         Variabler.save_variable(total_samples, sample_path)
         logger.info("success to save {} samples: {}, total exception: {}, normal: {}".format(
             "SkAB", sample_path, exception_count, normal_count))
@@ -322,25 +323,36 @@ class DataPreprocessor(object):
 
     @classmethod
     def get_sample_objs(cls, source, dataset, data_des, sample_time_window_before, sample_time_window_after,
-                        sample_day_window, pred_len, minute_interval=1, sample_times=None):
+                        sample_day_window, pred_len, minute_interval=1, sample_times=None, second_interval=None):
         """
         获取SMD样本数据集（数据均插值处理成1min级别的数据，然后再获取样本）
         """
         if source is None or len(source) <= 0:
             return None
         exception_samples, normal_samples = [], []
-        legal_source_count = (sample_time_window_before // minute_interval + 1 +
-                              sample_time_window_after // minute_interval) * (sample_day_window + 1)
+        count_gap = second_interval if second_interval is not None else minute_interval
+        history_day_count = 0 if sample_day_window <= 0 else (sample_day_window + 1)
+        legal_source_count = (sample_time_window_before // count_gap + 1 +
+                              sample_time_window_after // count_gap) * (sample_day_window + 1)
         if sample_times is None:
             total_times = source[column_time].tolist()
-            sample_start_index = (1440 // minute_interval) * (sample_day_window + 1) + \
-                                 sample_time_window_before * minute_interval
+            sample_start_index = (1440 // minute_interval) * history_day_count + \
+                                 sample_time_window_before * count_gap
             sample_times = total_times[sample_start_index:]
         for sample_time in sample_times:
-            sample_time_list = Timer.get_dynamic_sample_time_list(
-                sample_time, minute_interval, sample_day_window, sample_time_window_before, sample_time_window_after,
-                pred_len)
+            if second_interval is not None:
+                sample_time_list = Timer.get_dynamic_sample_second_time_list(
+                    sample_time, second_interval, sample_day_window, sample_time_window_before,
+                    sample_time_window_after, pred_len)
+            else:
+                sample_time_list = Timer.get_dynamic_sample_time_list(
+                    sample_time, minute_interval, sample_day_window, sample_time_window_before,
+                    sample_time_window_after, pred_len)
             sample_data = source[source[column_time].isin(sample_time_list)]
+            sample_data = DataPreprocessor.fill_source_with_sample_time_list(sample_data, sample_time_list)
+            if "datetime" in sample_data.columns:
+                sample_data.drop(columns=["datetime"], inplace=True)
+            sample_data.sort_values(by=column_time, inplace=True)
             if sample_data is None or len(sample_data) != legal_source_count:
                 continue
             sample_obj = SampleObj()
@@ -356,6 +368,63 @@ class DataPreprocessor(object):
         logger.info("success to get samples for {}-{}, total exception samples: {}, total normal samples: {}".format(
             dataset, data_des, len(exception_samples), len(normal_samples)))
         return [exception_samples, normal_samples]
+
+    @classmethod
+    def fill_source_with_sample_time_list(cls, source, sample_time_list, is_log=True):
+        """
+        根据数据列表时间点进行数据扩充
+        """
+        if source is None or len(source) <= 0:
+            return source
+        exist_time_list = source[column_time].tolist()
+        loss_time_list = list(set(sample_time_list).difference(set(exist_time_list)))
+        if loss_time_list is None or len(loss_time_list) <= 0 or len(loss_time_list) >= 0.4 * len(source):
+            if is_log:
+                # 数据缺失过多或者无缺失都不进行后续处理
+                logger.info("no loss or too much loss time, loss details：{}-{}.".format(
+                    len(loss_time_list) if loss_time_list is not None else 0, loss_time_list))
+            return source
+        loss_source_df = pd.DataFrame(np.full((len(loss_time_list), len(source.columns)), np.nan),
+                                      columns=source.columns)
+        loss_source_df[column_time] = loss_time_list
+        source = pd.concat([source, loss_source_df])
+        filled_source = DataPreprocessor.fill_loss_by_median(source.copy())
+        filled_source.fillna(method="ffill", inplace=True)
+        return filled_source
+
+    @classmethod
+    def fill_loss_by_median(cls, source):
+        """
+        采用历史数据中位数对缺失值进行填补
+        """
+        try:
+            if source is None or len(source) <= 0:
+                return source
+            if not source.isna().any().any():
+                # 若无缺失值，则返回
+                return source
+            source["datetime"] = source[column_time].tolist()
+            source["datetime"] = pd.to_datetime(source["datetime"])
+            source.index = source["datetime"]
+            # source_median = source.groupby([source.index.time]).transform("median")
+            source_median = source.groupby(source.index.time).apply(DataPreprocessor.compute_median)
+            filled_source = source.fillna(source_median)
+            filled_source.reset_index(drop=True, inplace=True)
+            filled_source.drop(columns=["datetime"], inplace=True)
+            # 采用线性的方式进行无对应时间点位的缺失值填充
+            filled_source.interpolate(inplace=True)
+            return filled_source
+        except Exception as e:
+            return source
+
+    @classmethod
+    def compute_median(cls, sub_df):
+        """
+        计算中位数
+        """
+        if sub_df is None or len(sub_df) <= 0:
+            return None
+        return sub_df.median()
 
     @classmethod
     def get_anomaly_details(cls, file_path):
@@ -415,7 +484,8 @@ class DataPreprocessor(object):
             if column == column_time:
                 continue
             sample_data = DataPreprocessor.remove_history_outlier(
-                sample_data, column, sample_window_before, sample_window_after, sample_day_window)
+                sample_data, column, sample_window_before, sample_window_after, sample_day_window,
+                anomaly_level_index=5)
         sample_data.sort_values(by=column_time, inplace=True)
         return sample_data
 
@@ -425,6 +495,9 @@ class DataPreprocessor(object):
         """
         remove extraordinary exception points in history data, substitute it by median value
         """
+        if sample_day_window <= 0:
+            # no history source to get
+            return source_df
         try:
             if source_df is None or len(source_df) <= 0:
                 return source_df

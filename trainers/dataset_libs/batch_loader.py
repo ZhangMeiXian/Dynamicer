@@ -43,7 +43,8 @@ class BatchLoader(object):
                 forcast_task=args.forcast_task, target_index=args.target_index, scale=True, timeenc=timeenc,
                 freq=args.freq, samples=samples, sample_time_window_before=args.sample_time_window_before,
                 sample_time_window_after=args.sample_time_window_after, sample_day_window=args.sample_day_window,
-                flag=flag, region=args.region, neighbor_window=args.neighbor_window
+                flag=flag, region=args.region, neighbor_window=args.neighbor_window, is_reduce_dim=args.is_reduce_dim,
+                target_dim=args.target_dim, seq_len=args.seq_len
             )
             Variabler.save_variable(data_set, dataset_path)
         else:

@@ -1,15 +1,16 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: 数据集预处理模块
+@ModuleName: dataset processing module
 @author: zhangmeixian
 """
 import json
 import os
 import numpy as np
 import pandas as pd
+from datetime import datetime, timedelta
 from configs.constants import column_time, column_label, label_normal, status_exception, status_exception_no, \
-    column_data, column_source_path, column_time_range, column_exception_range
+    column_data, column_source_path, column_time_range, column_exception_range, time_format_input_time
 from data.origin_data.CSM.metric_configs import DATA_DETAILS
 from commons.timer import Timer
 from commons.variabler import Variabler
@@ -29,17 +30,18 @@ class SampleObj(object):
         self.sample_data = None
         self.sample_label = None
         self.sample_time = None
+        self.second_interval = None
 
 
 class DataPreprocessor(object):
     """
-    数据集合处理入口
+    dataset processing entrence
     """
 
     @classmethod
     def execute(cls, args):
         """
-        执行数据处理
+        excutor of dataset processing
         """
         if args is None or args.dataset is None:
             print("illegal input, please check")
@@ -57,8 +59,8 @@ class DataPreprocessor(object):
             # elif dataset_name == "SMAP" or dataset_name == "MSL":
             #     cur_samples = DataPreprocessor.get_SMAP_and_MSL_dataset(
             #         sample_time_window_before, sample_time_window_after, sample_day_window, pred_len, dataset_name)
-            if dataset_name == "WADI":
-                cur_samples = DataPreprocessor.get_WADI_dataset(
+            if dataset_name == "NAB":
+                cur_samples = DataPreprocessor.get_NAB_dataset(
                     sample_time_window_before, sample_time_window_after, sample_day_window, pred_len)
             elif dataset_name == "SkAB":
                 cur_samples = DataPreprocessor.get_SkAB_dataset(
@@ -77,9 +79,53 @@ class DataPreprocessor(object):
         return total_samples
 
     @classmethod
+    def get_NAB_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
+        """
+        get NAB dataset
+        """
+        data_root_path = "./data/origin_data/NAB/data"
+        label_path = "./data/origin_data/NAB/labels/combined_windows.json"
+        with open(label_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        total_samples, exception_count, normal_count = [], 0, 0
+        for index_suffix, exception_windows in data.items():
+            # if exception_windows is None or len(exception_windows) <= 0:
+            #     continue
+            exception_windows = [[x[0][:19], x[1][:19]] for x in exception_windows]
+            exception_times = Timer.get_target_times_by_time_range(minute_interval=1, time_range=exception_windows)
+            data_path = "/".join([data_root_path, index_suffix])
+            if not os.path.exists(data_path):
+                continue
+            cur_source = pd.read_csv(data_path, index_col=0)
+            cur_source = cur_source.reset_index().rename(columns={"timestamp": column_time, "value": column_data})
+            cur_source[column_time] = cur_source[column_time].apply(lambda x: Timer.format_time_to_minute(x))
+            cur_source.drop_duplicates(inplace=True)
+            cur_source = DataPreprocessor.source_interpolation(cur_source, minute_interval=1)
+            minute_interval = int(Timer.get_second_gap_between_time(
+                cur_source[column_time].iloc[0], cur_source[column_time].iloc[1]) // 60)
+            print("{}, minute interval: {}".format(index_suffix, minute_interval))
+            cur_source[column_label] = cur_source[column_time].apply(
+                lambda x: status_exception if x in exception_times else status_exception_no)
+            cur_samples = DataPreprocessor.get_sample_objs(
+                cur_source, "NAB", index_suffix, sample_time_window_before, sample_time_window_after, sample_day_window,
+                pred_len)
+            if cur_samples is None or len(cur_samples) <= 0:
+                continue
+            exception_count += len(cur_samples[0])
+            normal_count += len(cur_samples[1])
+            # if exception_count + normal_count >= 16078:
+            #     break
+            total_samples.append(cur_samples)
+        sample_path = "./data/dataset/{}/{}.pickle".format("NAB", "NAB")
+        Variabler.save_variable(total_samples, sample_path)
+        logger.info("success to save {} samples: {}, total exception: {}, normal: {}".format(
+            "NAB", sample_path, exception_count, normal_count))
+        return total_samples
+
+    @classmethod
     def get_CSM_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
         """
-        获取自定义数据集
+        get CSM dataset
         """
         index_ids = list(DATA_DETAILS.keys())
         total_samples, exception_count, normal_count = [], 0, 0
@@ -90,6 +136,8 @@ class DataPreprocessor(object):
             sample_times = Timer.get_target_times_by_time_range(1, sample_time_range)
             exception_times = Timer.get_target_times_by_time_range(1, sample_exception_range)
             cur_source = pd.read_csv(source_path, index_col=0)
+            cur_source[column_time] = cur_source[column_time].apply(lambda x: Timer.format_time_to_minute(x))
+            cur_source = DataPreprocessor.source_interpolation(cur_source, minute_interval=1)
             cur_source[column_label] = cur_source[column_time].apply(
                 lambda x: status_exception if x in exception_times else status_exception_no)
             cur_samples = DataPreprocessor.get_sample_objs(
@@ -109,7 +157,7 @@ class DataPreprocessor(object):
     @classmethod
     def get_AIOps_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
         """
-        获取并处理AIOps数据集
+        get AIOps dataset
         """
         root_dir = "./data/origin_data/AIOps"
         ground_truth_file = os.path.join(root_dir, "phase2_ground_truth.hdf")
@@ -129,6 +177,7 @@ class DataPreprocessor(object):
             exception_count += len(cur_samples[0])
             normal_count += len(cur_samples[1])
             total_samples.append(cur_samples)
+            break
         sample_path = "./data/dataset/{}/{}.pickle".format("AIOps", "AIOps")
         Variabler.save_variable(total_samples, sample_path)
         logger.info("success to save {} samples: {}, total exception: {}, normal: {}".format(
@@ -138,7 +187,7 @@ class DataPreprocessor(object):
     @classmethod
     def get_SkAB_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
         """
-        获取并处理SkAB数据集
+        get SkAB dataset
         """
         root_dir = "./data/origin_data/SkAB"
         data_dirs = ["data/valve1", "data/valve2", "data/other"]
@@ -175,7 +224,7 @@ class DataPreprocessor(object):
     def get_SMAP_and_MSL_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len,
                                  dataset_name):
         """
-        获取SMAP&MSL数据集
+        get SMAP & MSL dataset
         """
         root_dir = "./data/origin_data/MSL&SMAP"
         test_dir = os.path.join(root_dir, "test")
@@ -222,7 +271,7 @@ class DataPreprocessor(object):
     @classmethod
     def get_total_anomaly_index(cls, anomaly_sequences):
         """
-        获取所有的异常索引
+        get anomaly index
         """
         if anomaly_sequences is None or len(anomaly_sequences) <= 0:
             return []
@@ -236,7 +285,7 @@ class DataPreprocessor(object):
     @classmethod
     def get_WADI_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
         """
-        获取WADI数据集
+        get WADI dataset
         """
         test_new = pd.read_csv("./data/origin_data/WADI/WADI_attackdataLABLE.csv", skiprows=1)
         test_new.columns = test_new.columns.str.strip()
@@ -249,11 +298,11 @@ class DataPreprocessor(object):
         test_new.loc[test_new['label'] == -1, 'label'] = status_exception
         test_new = test_new.fillna(method="ffill")
         # get time column
-        test_new[column_time] = test_new.apply(lambda x: DataPreprocessor.get_time(x.Date, x.Time), axis=1)
+        test_new[column_time] = DataPreprocessor.get_time(test_new["Date"].tolist(), test_new["Time"].tolist())
         test_new.drop(columns=["Date", "Time", "Row"], inplace=True)
         sample_objs = DataPreprocessor.get_sample_objs(
             test_new, "WADI", "WADI_attackdataLABLE.csv", sample_time_window_before, sample_time_window_after,
-            sample_day_window, pred_len)
+            sample_day_window, pred_len, second_interval=1)
         sample_objs = [sample_objs]
         exception_count, normal_count = len(sample_objs[0][0]), len(sample_objs[0][1])
         sample_path = "./data/dataset/WADI/WADI.pickle"
@@ -263,21 +312,39 @@ class DataPreprocessor(object):
         return sample_objs
 
     @classmethod
-    def get_time(cls, data_str, time_str):
+    def get_time(cls, date_strs, time_strs):
         """
-        获取时间
+        parse time for WADI dataset
         """
-        day, month, year = data_str.split("/")
-        year = "20" + year
-        month = "0" + month if len(month) == 1 else month
-        time_str = time_str[:5] + ":00"
-        final_time = year + "-" + month + "-" + day + " " + time_str
-        return final_time
+        time_list = []
+        hour_count, data_count = 18, 0
+        for date_str, time_str in zip(date_strs, time_strs):
+            time_str = DataPreprocessor.convert_time_str(time_str, hour_count)
+            raw_str = date_str + " " + time_str
+            raw_str_datetime = datetime.strptime(raw_str, "%m/%d/%y %H:%M:%S")
+            raw_time = raw_str_datetime.strftime("%Y-%m-%d %H:%M:%S")
+            data_count += 1
+            if data_count >= 3600 and data_count % 3600 == 0:
+                hour_count += 1
+            if hour_count >= 24:
+                hour_count = 0
+            time_list.append(raw_time)
+        return time_list
+
+    @classmethod
+    def convert_time_str(cls, time_str, hour_count):
+        """
+        convert time string by adding hour info
+        """
+        # parse time
+        minutes, seconds = int(time_str.split(':')[0]), int(time_str.split(':')[1][:2])
+        time_str_modified = f"{hour_count:02d}:{minutes:02d}:{seconds:02d}"
+        return time_str_modified
 
     @classmethod
     def get_SMD_dataset(cls, sample_time_window_before, sample_time_window_after, sample_day_window, pred_len):
         """
-        处理并获取SMD数据集
+        get SMD dataset
         """
         root_path = "./data/origin_data/SMD/ServerMachineDataset"
         data_saved_path = "./data/dataset/SMD"
@@ -323,22 +390,25 @@ class DataPreprocessor(object):
 
     @classmethod
     def get_sample_objs(cls, source, dataset, data_des, sample_time_window_before, sample_time_window_after,
-                        sample_day_window, pred_len, minute_interval=1, sample_times=None, second_interval=None):
+                        sample_day_window, pred_len, minute_interval=1, sample_times=None, second_interval=None,
+                        sample_limit_count=100000):
         """
-        获取SMD样本数据集（数据均插值处理成1min级别的数据，然后再获取样本）
+        get sample objects
         """
         if source is None or len(source) <= 0:
             return None
         exception_samples, normal_samples = [], []
         count_gap = second_interval if second_interval is not None else minute_interval
-        history_day_count = 0 if sample_day_window <= 0 else (sample_day_window + 1)
-        legal_source_count = (sample_time_window_before // count_gap + 1 +
-                              sample_time_window_after // count_gap) * (sample_day_window + 1)
+        history_day_count = 0 if sample_day_window <= 0 else sample_day_window
+        legal_source_count = (sample_time_window_before // count_gap + 1) * (sample_day_window + 1) + \
+                             (sample_time_window_after // count_gap) * sample_day_window
         if sample_times is None:
             total_times = source[column_time].tolist()
-            sample_start_index = (1440 // minute_interval) * history_day_count + \
+            minute_interval = second_interval / 60 if second_interval is not None else minute_interval
+            sample_start_index = (int(1440 / minute_interval)) * history_day_count + \
                                  sample_time_window_before * count_gap
             sample_times = total_times[sample_start_index:]
+        sample_count = 0
         for sample_time in sample_times:
             if second_interval is not None:
                 sample_time_list = Timer.get_dynamic_sample_second_time_list(
@@ -349,7 +419,8 @@ class DataPreprocessor(object):
                     sample_time, minute_interval, sample_day_window, sample_time_window_before,
                     sample_time_window_after, pred_len)
             sample_data = source[source[column_time].isin(sample_time_list)]
-            sample_data = DataPreprocessor.fill_source_with_sample_time_list(sample_data, sample_time_list)
+            sample_data = DataPreprocessor.fill_source_with_sample_time_list(sample_data, sample_time_list,
+                                                                             is_log=False)
             if "datetime" in sample_data.columns:
                 sample_data.drop(columns=["datetime"], inplace=True)
             sample_data.sort_values(by=column_time, inplace=True)
@@ -360,22 +431,62 @@ class DataPreprocessor(object):
             sample_obj.sample_data = sample_data
             sample_obj.dataset = dataset
             sample_obj.data_des = data_des
-            sample_obj.sample_label = source[source[column_time] == sample_time][column_label].iloc[0]
-            if sample_obj.sample_label == status_exception:
+            sample_obj.second_interval = second_interval if second_interval is not None else minute_interval * 60
+            sample_obj.sample_label = source[source[column_time] == sample_time][column_label].iloc[0] if len(
+                source[source[column_time] == sample_time]) > 0 else None
+            sample_obj.unique_key = "_".join([dataset, str(data_des), sample_time])
+            if sample_obj.sample_label is None:
+                print("[{}-{}] no label sample: {}".format(dataset, data_des, sample_time))
+                continue
+            elif sample_obj.sample_label == status_exception:
                 exception_samples.append(sample_obj)
             else:
                 normal_samples.append(sample_obj)
+            sample_count += 1
+            print("\rsample obj process pace ratio: {}%".format(round((sample_count) / len(sample_times), 6) * 100),
+                  end="")
+        print("")
         logger.info("success to get samples for {}-{}, total exception samples: {}, total normal samples: {}".format(
             dataset, data_des, len(exception_samples), len(normal_samples)))
         return [exception_samples, normal_samples]
 
     @classmethod
-    def fill_source_with_sample_time_list(cls, source, sample_time_list, is_log=True):
+    def source_interpolation(cls, source, minute_interval=1):
         """
-        根据数据列表时间点进行数据扩充
+        data interpolation
         """
         if source is None or len(source) <= 0:
             return source
+        source_interpolation = source.copy()
+        start_time, end_time = source_interpolation[column_time].min(), \
+                               source_interpolation[column_time].max()
+        target_time_list = Timer.get_target_time_list(
+            minute_interval=minute_interval, start_time=start_time, end_time=end_time)
+        exist_time_list = source_interpolation[column_time].tolist()
+        loss_time_list = list(set(target_time_list).difference(set(exist_time_list)))
+        if loss_time_list is None or len(loss_time_list) <= 0:
+            return source_interpolation
+        source_interpolation["datetime"] = source_interpolation[column_time].tolist()
+        source_interpolation["datetime"] = pd.to_datetime(source_interpolation["datetime"])
+        source_interpolation.index = source_interpolation["datetime"]
+        source_interpolated = source_interpolation.resample("{}T".format(minute_interval)).asfreq().interpolate(
+            method="linear")
+        source_interpolated.drop(columns=[column_time, "datetime"], inplace=True)
+        source_interpolated[column_time] = source_interpolated.index
+        source_interpolated[column_time] = source_interpolated[column_time].apply(
+            lambda x: x.strftime(time_format_input_time))
+        source_interpolated.reset_index(drop=True, inplace=True)
+        return source_interpolated
+
+    @classmethod
+    def fill_source_with_sample_time_list(cls, source, sample_time_list, is_log=True):
+        """
+        fill nan
+        """
+        if source is None or len(source) <= 0:
+            return source
+        if "KPI ID" in source:
+            source.drop(columns="KPI ID", inplace=True)
         exist_time_list = source[column_time].tolist()
         loss_time_list = list(set(sample_time_list).difference(set(exist_time_list)))
         if loss_time_list is None or len(loss_time_list) <= 0 or len(loss_time_list) >= 0.4 * len(source):
@@ -383,19 +494,30 @@ class DataPreprocessor(object):
                 # 数据缺失过多或者无缺失都不进行后续处理
                 logger.info("no loss or too much loss time, loss details：{}-{}.".format(
                     len(loss_time_list) if loss_time_list is not None else 0, loss_time_list))
+            time_label_cols = [column_time, column_label]
+            data_cols = source.columns.difference(time_label_cols)
+            column_means = source[data_cols].mean()
+            df_filled = source.copy()
+            df_filled[data_cols] = df_filled[data_cols].fillna(column_means)
+            source.fillna(method="ffill", inplace=True)
             return source
         loss_source_df = pd.DataFrame(np.full((len(loss_time_list), len(source.columns)), np.nan),
                                       columns=source.columns)
         loss_source_df[column_time] = loss_time_list
         source = pd.concat([source, loss_source_df])
         filled_source = DataPreprocessor.fill_loss_by_median(source.copy())
+        time_label_cols = [column_time, column_label]
+        data_cols = filled_source.columns.difference(time_label_cols)
+        column_means = filled_source[data_cols].mean()
+        df_filled = filled_source.copy()
+        df_filled[data_cols] = df_filled[data_cols].fillna(column_means)
         filled_source.fillna(method="ffill", inplace=True)
-        return filled_source
+        return df_filled
 
     @classmethod
     def fill_loss_by_median(cls, source):
         """
-        采用历史数据中位数对缺失值进行填补
+        fill nan by median
         """
         try:
             if source is None or len(source) <= 0:
@@ -420,7 +542,7 @@ class DataPreprocessor(object):
     @classmethod
     def compute_median(cls, sub_df):
         """
-        计算中位数
+        get median
         """
         if sub_df is None or len(sub_df) <= 0:
             return None
@@ -429,7 +551,7 @@ class DataPreprocessor(object):
     @classmethod
     def get_anomaly_details(cls, file_path):
         """
-        获取异常指标详情
+        get anomaly details
         """
         anomaly_details, total_anomaly_index_list = {}, []
         with open(file_path, "r") as f:
@@ -444,14 +566,39 @@ class DataPreprocessor(object):
         return anomaly_details, list(set(total_anomaly_index_list))
 
     @classmethod
-    def split_samples(cls, total_samples, train_ratio, test_ratio):
+    def split_samples_by_class(cls, total_samples, train_ratio, test_ratio):
         """
-        将样本分层采样数据集划分程训练、验证和测试数据集
+        split samples by class (only train with normal samples, exceptions in test samples)
         """
         if total_samples is None or len(total_samples) <= 0:
             return None, None, None
         train_samples, valid_samples, test_samples = [], [], []
         for exception_samples, normal_samples in total_samples:
+            if exception_samples is not None and len(exception_samples) > 0:
+                test_samples.extend(exception_samples)
+            if normal_samples is not None and len(normal_samples) > 0:
+                index1, index2 = int(len(normal_samples) * train_ratio), int(
+                    len(normal_samples) * (1 - test_ratio))
+                train_samples.extend(normal_samples[:index1])
+                if index2 < len(normal_samples):
+                    valid_samples.extend(normal_samples[index1: index2])
+                if index2 < len(normal_samples):
+                    test_samples.extend(normal_samples[index2:])
+        return train_samples, valid_samples, test_samples
+
+    @classmethod
+    def grousampling(cls, total_samples, train_ratio, test_ratio, dataset_name):
+        """
+        Grousampling
+        """
+        if total_samples is None or len(total_samples) <= 0:
+            return None, None, None, None
+        train_samples, valid_samples, test_samples, showed_samples = [], [], [], []
+        for exception_samples, normal_samples in total_samples:
+            if exception_samples is not None and len(exception_samples) > 0 and normal_samples is not None and len(
+                    normal_samples) > 0 and len(showed_samples) <= 0 and dataset_name not in ["WADI"]:
+                showed_samples.extend(exception_samples)
+                showed_samples.extend(normal_samples)
             if exception_samples is not None and len(exception_samples) > 0:
                 index1, index2 = int(len(exception_samples) * train_ratio), int(
                     len(exception_samples) * (1 - test_ratio))
@@ -468,7 +615,7 @@ class DataPreprocessor(object):
                     valid_samples.extend(normal_samples[index1: index2])
                 if index2 < len(normal_samples):
                     test_samples.extend(normal_samples[index2:])
-        return train_samples, valid_samples, test_samples
+        return train_samples, valid_samples, test_samples, showed_samples
 
     @classmethod
     def process_sample_data(cls, sample_data, sample_window_before, sample_window_after, sample_day_window):
@@ -476,9 +623,12 @@ class DataPreprocessor(object):
         process sample data
         """
         if sample_data is None or len(sample_data) <= 0:
-            return
+            return None
         if column_label in sample_data:
             sample_data.drop(columns=column_label, inplace=True)
+        if "KPI ID" in sample_data:
+            sample_data.drop(columns="KPI ID", inplace=True)
+        # print(list(sample_data.columns))
         # process history special outliers
         for column in sample_data.columns:
             if column == column_time:
@@ -501,8 +651,8 @@ class DataPreprocessor(object):
         try:
             if source_df is None or len(source_df) <= 0:
                 return source_df
-            history_source = source_df[:(sample_window_before + 1 + sample_window_after) * (sample_day_window - 1)]
-            cur_source = source_df[(sample_window_before + 1 + sample_window_after) * (sample_day_window - 1):]
+            history_source = source_df[:(sample_window_before + 1 + sample_window_after) * sample_day_window]
+            cur_source = source_df[(sample_window_before + 1 + sample_window_after) * sample_day_window:]
             Q1 = DataPreprocessor.percentile(history_source[column_name].tolist(), 0.25)
             Q3 = DataPreprocessor.percentile(history_source[column_name].tolist(), 0.75)
             IQR = Q3 - Q1

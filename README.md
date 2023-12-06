@@ -10,16 +10,14 @@ python >= 3.6
 ## single index dataset with timestamp
 
 AIOps challenge 2018: download and unzip data.
-> [AIOps](https://smileyan.lanzoul.com/ixpcU03lp97g)
+> [Web of AIOps](https://smileyan.lanzoul.com/ixpcU03lp97g)
 
 > [AIOps-github](https://github.com/NetManAIOps/KPI-Anomaly-Detection)
 
-CSM: our non-public dataset CSM(Custom Server Metrics).
-
-## multi index dataset with timestamp
-
 NAB: git download.
 > [NAB](https://github.com/numenta/NAB)
+
+## multi index dataset with timestamp
 
 SkAB: git download.
 > [SkAB](https://github.com/waico/SkAB)

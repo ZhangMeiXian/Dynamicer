@@ -2,32 +2,35 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: 数值预测模型训练入口
+@ModuleName: entrence of training and testing
 @author: zhangmeixian
 """
 
 import argparse
 from trainers.exp_executor import ExpExecutor
+from commons.logger import record_log
 
 
 def main():
     """
-    数值预测模型训练入口
+    training and testing
     """
     parser = argparse.ArgumentParser(description="Trainer for Adjusted Non-stationary Dynamic Time Series Forecasting")
 
     # basic config
     parser.add_argument("--is_training", action="store_false", default=True, help="Training status. Default is True.")
-    parser.add_argument("--do_anomaly_detection", action="store_false", default=True,
+    parser.add_argument("--do_anomaly_detection", action="store_true", default=False,
                         help="anomaly detection status. Default is True.")
     parser.add_argument("--anomaly_loss_weight", type=float, default=2.5, help="weight of anomaly detection loss")
+    parser.add_argument("--anomaly_class_weight", type=float, default=1.08,
+                        help="class weight of anomaly points for anomaly detection")
     parser.add_argument("--model", choices=["adj_ns_Transformer", "adj_ns_Autoformer", "adj_ns_Informer",
-                                            "adj_ns_FEDformer", "ts_Dynamicer"],
-                        required=True, default="ts_Dynamicer", help="Model name. Default is ts_Dynamicer.")
+                                            "adj_ns_FEDformer", "adj_ns_DLinear", "tsDynamicer"],
+                        required=True, default="tsDynamicer", help="Model name. Default is tsDynamicer.")
     parser.add_argument("--model_des", type=str, required=True, default="CSM_train", help="model description.")
     parser.add_argument("--exp_des", type=str, default="CSM_train", help="experiment description")
     # special basic configs of FEDformer
-    parser.add_argument("--version", type=str, default="Waveets",
+    parser.add_argument("--version", type=str, default="Wavelets",
                         help="for FEDformer, there are two versions to choose, options: [Fourier, Wavelets]")
     parser.add_argument("--mode_select", type=str, default="random",
                         help="for FEDformer, there are two mode selection method, options: [random, low]")
@@ -36,11 +39,11 @@ def main():
     parser.add_argument("--base", type=str, default="legendre", help="for FEDformer, mwt base")
     parser.add_argument("--cross_activation", type=str, default="tanh",
                         help="for FEDformer, mwt cross atention activation function tanh or softmax")
-    # special basic configs of ts_Dynamicer
+    # special basic configs of tsDynamicer
     parser.add_argument("--region", type=str, default="China",
-                        help="for ts_Dynamicer, get special day extra information, "
+                        help="for tsDynamicer, get special day extra information, "
                              "can get from package e.g.: holidays, workalendar, chinese calendar")
-    parser.add_argument("--neighbor_window", type=int, default=10, help="for ts_Dynamicer, neighbor time window")
+    parser.add_argument("--neighbor_window", type=int, default=10, help="for tsDynamicer, neighbor time window")
 
     # dataset config
     parser.add_argument("--dataset", type=str, required=True, default="CSM", help="dataset field")
@@ -73,6 +76,10 @@ def main():
     parser.add_argument("--enc_in", type=int, default=7, help="encoder input size")
     parser.add_argument("--dec_in", type=int, default=7, help="decoder input size")
     parser.add_argument("--c_out", type=int, default=7, help="output size")
+    parser.add_argument("--is_reduce_dim", action="store_true", default=False,
+                        help="to reduce dimension of data for data with to much dimensions")
+    parser.add_argument("--target_dim", type=int, default=64, help="target dimension to reduce to")
+    parser.add_argument("individual", action="store_true", default=False, help="individual status. Default is True.")
     parser.add_argument("--d_model", type=int, default=512, help="dimension of model")
     parser.add_argument("--n_heads", type=int, default=8, help="num of heads")
     parser.add_argument("--e_layers", type=int, default=2, help="num of encoder layers")
@@ -88,17 +95,23 @@ def main():
                         help="time features encoding, options:[timeF, fixed, learned]")
     parser.add_argument("--activation", type=str, default="gelu", help="activation")
     parser.add_argument("--output_attention", action="store_true", help="whether to output attention in encoder")
+    parser.add_argument("--is_grad_clip", action="store_true", default=False, help="whether to use gradient clipping")
+    parser.add_argument("--max_grad_norm", type=float, default=10.0, help="gradient clipping value")
 
     # optimization config
-    parser.add_argument("--num_workers", type=int, default=10, help="data loader num workers")
+    parser.add_argument("--num_workers", type=int, default=2, help="data loader num workers")
     parser.add_argument("--itr", type=int, default=1, help="experiments times")
     parser.add_argument("--train_epochs", type=int, default=10, help="train epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="batch size of train input data")
     parser.add_argument("--patience", type=int, default=3, help="early stopping patience")
     parser.add_argument("--learning_rate", type=float, default=0.0001, help="optimizer learning rate")
-    parser.add_argument("--loss", type=str, default="sign_mse_anomaly",
-                        choices=["mse", "sign_mse", "sign_mse_anomaly", "quantile_loss", "weighted_quantile_loss"],
+    parser.add_argument("--loss", type=str, default="sign_mse",
+                        choices=["mse", "sign_mse", "quantile_loss", "weighted_quantile_loss", "mae", "sign_mae"],
                         help="loss function")
+    parser.add_argument("--index_ratio", type=float, default=0.2, help="ratio of index that can lead to anomaly.")
+    parser.add_argument("--anomaly_ratio", type=float, default=0.2, help="ratio of index anomaly state.")
+    parser.add_argument("--anomaly_state", type=str, default="both", choices=["both", "up", "down"],
+                        help="state of index to be anomaly.")
     parser.add_argument("--lambda_weight", type=float, default=0.01, help="weight of sign_mse loss function")
     parser.add_argument("--ita_weight", type=float, default=0.01, help="weight of sign_mse_anomaly loss function")
     parser.add_argument("--q_value", type=float, default=0.5, help="quantile value of quantile_loss")
@@ -121,6 +134,15 @@ def main():
 
     # get input args
     args = parser.parse_args()
+
+    if args.is_reduce_dim:
+        args.enc_in = args.target_dim
+        args.dec_in = args.target_dim
+        args.c_out = args.target_dim
+        args.n_index = args.target_dim
+
+    # record log to file
+    record_log(file_name=args.model)
 
     # training & testing
     ExpExecutor(args).execute()

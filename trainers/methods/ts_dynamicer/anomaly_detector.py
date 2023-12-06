@@ -15,6 +15,7 @@ class moving_avg(nn.Module):
     """
     Moving average block to highlight the trend of time series
     """
+
     def __init__(self, kernel_size, stride):
         super(moving_avg, self).__init__()
         self.kernel_size = kernel_size
@@ -95,6 +96,7 @@ class DynamicAnomalyDetector(nn.Module):
     """
     dynamic anomaly detector
     """
+
     def __init__(self, args):
         super(DynamicAnomalyDetector, self).__init__()
         self.sample_time_window_before = args.sample_time_window_before
@@ -196,10 +198,10 @@ class AnomalyDetector(nn.Module):
         history_index = self.sample_time_window_before + 1 \
             if self.sample_day_window > 0 else self.sample_time_window_before // 3
         history_array = source_array[:, :-(history_index), :]
-        
+
         mean = torch.mean(history_array, dim=(0, 1), keepdim=True)
         std = torch.std(history_array, dim=(0, 1), keepdim=True)
-        
+
         # get de-normalized outputs_y, batch_y
         true_y = source_array[:, -self.pred_len:, :]
         true_y = (true_y - mean) / std
@@ -234,4 +236,3 @@ class AnomalyDetector(nn.Module):
         # output_res = (output_res.permute(0, 2, 1) - mean) / std
         # batch_res = (batch_res.permute(0, 2, 1) - mean) / std
         return labels
-

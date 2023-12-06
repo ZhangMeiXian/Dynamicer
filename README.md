@@ -18,25 +18,14 @@ CSM: our non-public dataset CSM(Custom Server Metrics).
 
 ## multi index dataset with timestamp
 
-SWaT&WADI(SWaT not used): apply for the data access permission.
-> [application_url](https://itrust.sutd.edu.sg/itrust-labs_datasets/dataset_info/)
+NAB: git download.
+> [NAB](https://github.com/numenta/NAB)
 
 SkAB: git download.
 > [SkAB](https://github.com/waico/SkAB)
 
-## other unused dataset (no timestamp)
-
-NAB: git download.
-> [NAB](https://github.com/numenta/NAB)
-
-SMD: git download.
-> [SMD](https://github.com/NetManAIOps/OmniAnomaly/tree/master/ServerMachineDataset)
-
-> MSL&SMAP: terminate download and unzip data.
-```shell
-wget https://s3-us-west-2.amazonaws.com/telemanom/data.zip && unzip data.zip && rm data.zip
-cd data && wget https://raw.githubusercontent.com/khundman/telemanom/master/labeled_anomalies.csv
-```
+## custom dataset
+> Custom Server Metrics (CSM): non-public dataset.
 
 # Get Started: Data Preprocessing、Training and Anomaly Detection.
 all datasets will be processed to dataframe with the same sample_obj list: [sample_obj1, sample_obj2, ...],details:
@@ -51,13 +40,19 @@ all datasets will be processed to dataframe with the same sample_obj list: [samp
 > sample_obj.label: label of current sample, 0 for exception and 1 for normal
 
 start script (e.g. SMD)
-> bash ./scripts/SkAB.sh
+> bash ./scripts/SkAB/SkAB-TSDynamicer.sh
 
-# Results
+# Further Reading
 
 # Citations
 
 # Contact
+If you have any question or want to use the code, please contact [mxzhanghhh@163.com](mxzhanghhh@163.com).
 
 # Acknowledgement
+We appreciate the following github repositories:
+[https://github.com/zhouhaoyi/Informer2020](https://github.com/zhouhaoyi/Informer2020)
+[https://github.com/thuml/Autoformer](https://github.com/thuml/Autoformer)
+[https://github.com/MAZiqing/FEDformer](https://github.com/MAZiqing/FEDformer)
+[https://github.com/cure-lab/LTSF-Linear](https://github.com/cure-lab/LTSF-Linear)
 

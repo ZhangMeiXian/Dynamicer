@@ -59,4 +59,3 @@ class BatchLoader(object):
         else:
             data_loader = Variabler.load_variable(loader_path)
         return data_set, data_loader
-

@@ -37,7 +37,7 @@ all datasets will be processed to dataframe with the same sample_obj list: [samp
 
 > sample_obj.label: label of current sample, 0 for exception and 1 for normal
 
-start script (e.g. SMD)
+start script (e.g. SkAB)
 > bash ./scripts/SkAB/SkAB-TSDynamicer.sh
 
 # Further Reading

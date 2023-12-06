@@ -60,3 +60,5 @@ We appreciate the following github repositories:
 
 [https://github.com/cure-lab/LTSF-Linear](https://github.com/cure-lab/LTSF-Linear)
 
+[https://github.com/thuml/Nonstationary_Transformers](https://github.com/thuml/Nonstationary_Transformers)
+

@@ -25,7 +25,7 @@ SkAB: git download.
 ## custom dataset
 > Custom Server Metrics (CSM): non-public dataset.
 
-# Get Started: Data Preprocessing、Training and Anomaly Detection.
+# Get Started
 all datasets will be processed to dataframe with the same sample_obj list: [sample_obj1, sample_obj2, ...],details:
 > sample_obj.sample_time: current time string
 

@@ -51,8 +51,12 @@ If you have any question or want to use the code, please contact [mxzhanghhh@163
 
 # Acknowledgement
 We appreciate the following github repositories:
+
 [https://github.com/zhouhaoyi/Informer2020](https://github.com/zhouhaoyi/Informer2020)
+
 [https://github.com/thuml/Autoformer](https://github.com/thuml/Autoformer)
+
 [https://github.com/MAZiqing/FEDformer](https://github.com/MAZiqing/FEDformer)
+
 [https://github.com/cure-lab/LTSF-Linear](https://github.com/cure-lab/LTSF-Linear)
 

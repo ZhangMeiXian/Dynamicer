@@ -1,0 +1,168 @@
+absl-py @ file:///home/conda/feedstock_root/build_artifacts/absl-py_1673535674859/work
+aiohttp @ file:///Users/runner/miniforge3/conda-bld/aiohttp_1666878633563/work
+aiosignal @ file:///home/conda/feedstock_root/build_artifacts/aiosignal_1667935791922/work
+annoy==1.17.1
+appdirs @ file:///home/conda/feedstock_root/build_artifacts/appdirs_1603108395799/work
+astunparse @ file:///home/conda/feedstock_root/build_artifacts/astunparse_1610696312422/work
+async-timeout @ file:///home/conda/feedstock_root/build_artifacts/async-timeout_1640026696943/work
+attrs @ file:///home/conda/feedstock_root/build_artifacts/attrs_1671632566681/work
+backports.zoneinfo==0.2.1
+blinker @ file:///home/conda/feedstock_root/build_artifacts/blinker_1664823096650/work
+brotlipy @ file:///Users/runner/miniforge3/conda-bld/brotlipy_1666764727380/work
+cached-property @ file:///home/conda/feedstock_root/build_artifacts/cached_property_1615209429212/work
+cachetools @ file:///home/conda/feedstock_root/build_artifacts/cachetools_1674482203741/work
+category-encoders==2.6.0
+certifi==2023.7.22
+cffi @ file:///Users/runner/miniforge3/conda-bld/cffi_1671179605388/work
+charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1661170624537/work
+chinese-calendar==1.8.0
+chinesecalendar==1.9.0
+click @ file:///home/conda/feedstock_root/build_artifacts/click_1666798198223/work
+cloudpickle==2.2.0
+colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1666700638685/work
+contourpy @ file:///Users/runner/miniforge3/conda-bld/contourpy_1673633733444/work
+convertdate==2.4.0
+cryptography @ file:///Users/runner/miniforge3/conda-bld/cryptography-split_1672673470954/work
+cycler @ file:///home/conda/feedstock_root/build_artifacts/cycler_1635519461629/work
+dask==2023.1.0
+distributed==2023.1.0
+dtaidistance==2.3.10
+einops==0.7.0
+et-xmlfile @ file:///home/conda/feedstock_root/build_artifacts/et_xmlfile_1674664118162/work
+filelock==3.9.0
+flatbuffers @ file:///home/conda/feedstock_root/build_artifacts/python-flatbuffers_1674415895114/work
+fonttools @ file:///Users/runner/miniforge3/conda-bld/fonttools_1666827220469/work
+frozendict==2.3.4
+frozenlist @ file:///Users/runner/miniforge3/conda-bld/frozenlist_1667935720915/work
+fsspec==2022.11.0
+fst-pso==1.8.1
+future==0.18.3
+FuzzyTM==2.0.5
+gast @ file:///home/conda/feedstock_root/build_artifacts/gast_1596839682936/work
+gensim @ file:///Users/runner/miniforge3/conda-bld/gensim_1671629329716/work
+google-auth @ file:///home/conda/feedstock_root/build_artifacts/google-auth_1673988769610/work
+google-auth-oauthlib @ file:///home/conda/feedstock_root/build_artifacts/google-auth-oauthlib_1630497468950/work
+google-pasta==0.2.0
+grpcio @ file:///Users/runner/miniforge3/conda-bld/grpc-split_1675289367073/work
+h5py @ file:///Users/runner/miniforge3/conda-bld/h5py_1674498930724/work
+HeapDict==1.0.1
+hnswlib==0.7.0
+huggingface-hub==0.17.3
+idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1663625384323/work
+idx2numpy==1.2.3
+imbalanced-learn==0.10.1
+imblearn==0.0
+importlib-metadata @ file:///home/conda/feedstock_root/build_artifacts/importlib-metadata_1672612343532/work
+itchat==1.2.32
+Jinja2==3.1.2
+joblib @ file:///home/conda/feedstock_root/build_artifacts/joblib_1663332044897/work
+keras @ file:///home/conda/feedstock_root/build_artifacts/keras_1669020828024/work/keras-2.11.0-py2.py3-none-any.whl
+Keras-Preprocessing @ file:///home/conda/feedstock_root/build_artifacts/keras-preprocessing_1610713559828/work
+kirin-help==0.1.8
+kiwisolver @ file:///Users/runner/miniforge3/conda-bld/kiwisolver_1666805848360/work
+lazy-object-proxy==1.9.0
+libclang==16.0.6
+llvmlite==0.39.1
+locket==1.0.0
+logger==1.4
+lunardate==0.2.0
+Markdown @ file:///home/conda/feedstock_root/build_artifacts/markdown_1657921053229/work
+MarkupSafe==2.1.1
+matplotlib @ file:///Users/runner/miniforge3/conda-bld/matplotlib-suite_1674078867946/work
+miniful==0.0.6
+mpmath==1.3.0
+msgpack==1.0.4
+multidict @ file:///Users/runner/miniforge3/conda-bld/multidict_1672339513800/work
+munkres==1.1.4
+natsort==8.2.0
+nltk @ file:///home/conda/feedstock_root/build_artifacts/nltk_1672696305909/work
+numba==0.56.4
+numexpr @ file:///Users/runner/miniforge3/conda-bld/numexpr_1680544721178/work
+numpy==1.23.0
+oauthlib @ file:///home/conda/feedstock_root/build_artifacts/oauthlib_1666056362788/work
+openai==0.26.5
+openpyxl==3.1.0
+opt-einsum @ file:///home/conda/feedstock_root/build_artifacts/opt_einsum_1617859230218/work
+packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1673482170163/work
+pandas==2.0.0
+partd==1.3.0
+patsy @ file:///home/conda/feedstock_root/build_artifacts/patsy_1665356157073/work
+Pillow @ file:///Users/runner/miniforge3/conda-bld/pillow_1675487390302/work
+plotly @ file:///home/conda/feedstock_root/build_artifacts/plotly_1674528396558/work
+pooch @ file:///home/conda/feedstock_root/build_artifacts/pooch_1643032624649/work
+protobuf==4.21.12
+psutil==5.9.4
+pyasn1==0.4.8
+pyasn1-modules==0.2.7
+pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1636257122734/work
+pycryptodome==3.17
+pydotplus @ file:///home/conda/feedstock_root/build_artifacts/pydotplus_1622588015615/work
+pyFUME==0.2.25
+PyJWT @ file:///home/conda/feedstock_root/build_artifacts/pyjwt_1666240235902/work
+pyluach==2.2.0
+PyMeeus==0.5.12
+PyMetis==2022.1
+pyOpenSSL @ file:///home/conda/feedstock_root/build_artifacts/pyopenssl_1672659226110/work
+pyparsing @ file:///home/conda/feedstock_root/build_artifacts/pyparsing_1652235407899/work
+pypng==0.20220715.0
+PyQRCode==1.2.1
+PySocks @ file:///home/conda/feedstock_root/build_artifacts/pysocks_1661604839144/work
+python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1626286286081/work
+pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1673864280276/work
+pyu2f @ file:///home/conda/feedstock_root/build_artifacts/pyu2f_1604248910016/work
+PyYAML==6.0
+regex @ file:///Users/runner/miniforge3/conda-bld/regex_1667265130454/work
+requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1673863902341/work
+requests-oauthlib @ file:///home/conda/feedstock_root/build_artifacts/requests-oauthlib_1643557462909/work
+rsa @ file:///home/conda/feedstock_root/build_artifacts/rsa_1658328885051/work
+safetensors==0.3.1
+scikit-learn==1.2.0
+scipy==1.10.0
+seaborn @ file:///home/conda/feedstock_root/build_artifacts/seaborn-split_1672497695270/work
+semver==2.13.0
+shap==0.41.0
+simpful==2.9.0
+six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
+sklearn==0.0.post7
+slicer==0.0.7
+smart-open @ file:///home/conda/feedstock_root/build_artifacts/smart_open_split_1673202927732/work/dist
+sortedcontainers==2.4.0
+statsmodels @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_a5_1ppgxud/croot/statsmodels_1674588817292/work
+stumpy==1.11.1
+sympy==1.12
+tables @ file:///Users/runner/miniforge3/conda-bld/pytables_1666850091580/work
+tblib==1.7.0
+tenacity @ file:///home/conda/feedstock_root/build_artifacts/tenacity_1663807083684/work
+tensorboard @ file:///home/conda/feedstock_root/build_artifacts/tensorboard_1673674224265/work/tensorboard-2.11.2-py3-none-any.whl
+tensorboard-data-server @ file:///Users/runner/miniforge3/conda-bld/tensorboard-data-server_1670043873570/work/tensorboard_data_server-0.6.1-py3-none-macosx_11_0_arm64.whl
+tensorboard-plugin-wit @ file:///home/conda/feedstock_root/build_artifacts/tensorboard-plugin-wit_1641458951060/work/tensorboard_plugin_wit-1.8.1-py3-none-any.whl
+tensorflow @ file:///Users/peter/miniforge3/conda-bld/tensorflow-split_1672959531299/work/tensorflow_pkg/tensorflow-2.11.0-cp38-cp38-macosx_11_0_arm64.whl
+tensorflow-estimator @ file:///Users/peter/miniforge3/conda-bld/tensorflow-split_1672959531299/work/tensorflow-estimator/wheel_dir/tensorflow_estimator-2.11.0-py2.py3-none-any.whl
+tensorflow-hub==0.12.0
+tensorflow-macos==2.13.0
+termcolor @ file:///home/conda/feedstock_root/build_artifacts/termcolor_1672833821273/work
+TFSnippet @ git+https://github.com/haowen-xu/tfsnippet.git@63adaf04d2ffff8dec299623627d55d4bacac598
+threadpoolctl==3.1.0
+tokenizers==0.14.1
+toolz==0.12.0
+torch @ file:///Users/runner/miniforge3/conda-bld/pytorch-recipe_1673797379060/work
+torchaudio==0.13.1
+torchvision @ file:///Users/runner/miniforge3/conda-bld/torchvision-split_1674327450269/work
+tornado @ file:///Users/runner/miniforge3/conda-bld/tornado_1666788903714/work
+tqdm @ file:///home/conda/feedstock_root/build_artifacts/tqdm_1662214488106/work
+transformers==4.34.0
+tsfresh==0.20.0
+typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1665144421445/work
+tzdata @ file:///home/conda/feedstock_root/build_artifacts/python-tzdata_1680081134351/work
+unicodedata2 @ file:///Users/runner/miniforge3/conda-bld/unicodedata2_1667240193675/work
+urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1673452138552/work
+wenxin-api==0.2.1
+Werkzeug @ file:///home/conda/feedstock_root/build_artifacts/werkzeug_1660053523487/work
+workalendar==17.0.0
+wrapt @ file:///Users/runner/miniforge3/conda-bld/wrapt_1666806186693/work
+wxpy==0.3.9.8
+xgboost==1.7.3
+yarl @ file:///Users/runner/miniforge3/conda-bld/yarl_1672341028160/work
+zhusuan @ git+https://github.com/thu-ml/zhusuan.git@4386b2a12ae4f4ed8e694e504e51d7dcdfd6f22a
+zict==2.2.0
+zipp==3.11.0

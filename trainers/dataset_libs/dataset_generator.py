@@ -93,7 +93,7 @@ class DatasetGenerator(Dataset):
                 sample_data_new[column_time] = sample_data[column_time].tolist()
                 sample_data = sample_data_new
             scalar_index = (self.sample_time_window_before + 1 + self.sample_time_window_after) * \
-                          self.sample_day_window \
+                           self.sample_day_window \
                 if self.sample_day_window > 0 else int(self.sample_time_window_before * 2 / 3)
             if self.forcast_task == 'M' or self.forcast_task == 'MS':
                 cols_data = [col for col in sample_data.columns if col != column_time]
@@ -109,7 +109,7 @@ class DatasetGenerator(Dataset):
             if sample_label == status_exception:
                 # get normal predict adjusted value
                 end_index = -self.sample_time_window_before if self.sample_day_window > 0 else -1
-                start_index = 0 if self.sample_day_window > 0 else -int(self.sample_time_window_before * 1/3)
+                start_index = 0 if self.sample_day_window > 0 else -int(self.sample_time_window_before * 1 / 3)
                 history_df = pd.DataFrame(history_data[start_index:end_index])
                 medians = history_df.median()
                 pred_data = pd.DataFrame([medians]).values

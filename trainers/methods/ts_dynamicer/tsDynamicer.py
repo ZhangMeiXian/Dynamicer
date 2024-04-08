@@ -1,7 +1,7 @@
 # coding=utf-8
 # author=zhangmeixian
 """
-framework of TSDynamicer
+details of TSDynamicer
 """
 
 import torch

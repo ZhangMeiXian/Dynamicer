@@ -30,6 +30,9 @@ class Projector(nn.Module):
         self.backbone = nn.Sequential(*layers)
 
     def forward(self, x, stats):
+        """
+        forward
+        """
         # x:     B x S x E
         # stats: B x 1 x E
         # y:     B x O

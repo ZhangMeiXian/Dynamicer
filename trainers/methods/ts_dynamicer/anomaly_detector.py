@@ -1,7 +1,7 @@
 # coding=utf-8
 # author=zhangmeixian
 """
-anomaly detection module
+anomaly detection module details
 """
 
 import torch

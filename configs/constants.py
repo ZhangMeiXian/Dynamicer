@@ -1,7 +1,7 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: constants
+@ModuleName: constants & configs
 @author: zhangmeixian
 """
 

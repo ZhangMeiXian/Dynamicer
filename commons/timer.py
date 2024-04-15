@@ -1,7 +1,7 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: time processors
+@ModuleName: time processor
 @author: zhangmeixian
 """
 import time

@@ -1,7 +1,7 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: variable processors
+@ModuleName: variable processor
 @author: zhangmeixian
 """
 import pickle

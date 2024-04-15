@@ -2,7 +2,7 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: experiment executor
+@ModuleName: entrence of experiment executor
 @author: zhangmeixian
 """
 import os

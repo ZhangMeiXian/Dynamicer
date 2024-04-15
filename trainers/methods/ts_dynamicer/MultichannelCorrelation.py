@@ -1,7 +1,7 @@
 # coding=utf-8
 # author=zhangmeixian
 """
-multichannel correlation module
+multichannel correlation modules
 """
 
 import torch

@@ -1,6 +1,7 @@
 # coding=utf-8
 # author=zhangmeixian
 """
+main framework
 details of TSDynamicer
 """
 

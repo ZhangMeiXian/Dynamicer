@@ -1,7 +1,7 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: batch process for dataset
+@ModuleName: batch processor for dataset
 @author: zhangmeixian
 """
 import os

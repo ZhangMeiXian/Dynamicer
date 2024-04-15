@@ -1,7 +1,7 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: dataset processing module
+@ModuleName: dataset processing module to get target samples
 @author: zhangmeixian
 """
 import json

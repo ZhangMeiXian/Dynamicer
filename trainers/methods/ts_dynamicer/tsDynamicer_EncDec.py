@@ -1,7 +1,7 @@
 # coding=utf-8
 # author=zhangmeixian
 """
-TSDynamicer Encoder-Decoder module
+TSDynamicer Encoder-Decoder modules
 """
 
 import torch

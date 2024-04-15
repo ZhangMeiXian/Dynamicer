@@ -1,7 +1,7 @@
 # !/usr/bin/python3.8
 
 """
-@ModuleName: module to process and get dataset
+@ModuleName: module to process and get target dataset
 @author: zhangmeixian
 """
 import numpy as np

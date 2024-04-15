@@ -41,9 +41,9 @@ def main():
                         help="for FEDformer, mwt cross atention activation function tanh or softmax")
     # special basic configs of tsDynamicer
     parser.add_argument("--region", type=str, default="China",
-                        help="for tsDynamicer, get special day extra information, "
+                        help="special for tsDynamicer, get special day extra information, "
                              "can get from package e.g.: holidays, workalendar, chinese calendar")
-    parser.add_argument("--neighbor_window", type=int, default=10, help="for tsDynamicer, neighbor time window")
+    parser.add_argument("--neighbor_window", type=int, default=10, help="special for tsDynamicer, neighbor time window")
 
     # dataset config
     parser.add_argument("--dataset", type=str, required=True, default="CSM", help="dataset field")

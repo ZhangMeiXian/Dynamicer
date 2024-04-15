@@ -3,6 +3,8 @@ data
 dataset
 logs
 results
+pics
+*.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
